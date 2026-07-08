@@ -1,0 +1,104 @@
+name: 'ChainSentry Scan'
+description: >-
+  Scan code, dependencies, and containers for vulnerabilities; fail the build
+  on policy breaches (critical CVEs, CISA KEV, high risk scores).
+author: 'ChainSentry'
+branding:
+  icon: 'shield'
+  color: 'purple'
+
+inputs:
+  fail-on-severity:
+    description: 'Minimum severity that fails the build (critical | high | medium | none)'
+    required: false
+    default: 'critical'
+  fail-on-kev:
+    description: 'Fail if any finding is in the CISA Known Exploited Vulnerabilities catalog'
+    required: false
+    default: 'true'
+  scan-image:
+    description: 'Optional container image reference to scan in addition to the filesystem'
+    required: false
+    default: ''
+  sbom:
+    description: 'Generate a CycloneDX SBOM and upload it as a workflow artifact'
+    required: false
+    default: 'true'
+  upload-url:
+    description: 'ChainSentry platform URL to upload results to (empty = CI-only mode, code never leaves the runner)'
+    required: false
+    default: ''
+  upload-token:
+    description: 'Repo-scoped ChainSentry upload token'
+    required: false
+    default: ''
+
+outputs:
+  critical-count:
+    description: 'Number of critical findings'
+    value: ${{ steps.gate.outputs.critical-count }}
+  kev-count:
+    description: 'Number of findings in the CISA KEV catalog'
+    value: ${{ steps.gate.outputs.kev-count }}
+  sbom-path:
+    description: 'Path to the generated CycloneDX SBOM'
+    value: ${{ steps.trivy-sbom.outputs.sbom-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Run Trivy (filesystem)
+      shell: bash
+      run: |
+        mkdir -p "$RUNNER_TEMP/chainsentry"
+        docker run --rm \
+          -v "$GITHUB_WORKSPACE:/workspace:ro" \
+          -v "$RUNNER_TEMP/chainsentry:/output" \
+          -v trivy-cache:/root/.cache \
+          aquasec/trivy:latest fs /workspace \
+          --scanners vuln,secret \
+          --format json --output /output/trivy-fs.json --exit-code 0
+
+    - name: Run Trivy (image)
+      if: ${{ inputs.scan-image != '' }}
+      shell: bash
+      run: |
+        docker run --rm \
+          -v /var/run/docker.sock:/var/run/docker.sock \
+          -v trivy-cache:/root/.cache \
+          aquasec/trivy:latest image "${{ inputs.scan-image }}" \
+          --format json --exit-code 0 > "$RUNNER_TEMP/chainsentry/trivy-image.json"
+
+    - name: Generate SBOM
+      id: trivy-sbom
+      if: ${{ inputs.sbom == 'true' }}
+      shell: bash
+      run: |
+        docker run --rm \
+          -v "$GITHUB_WORKSPACE:/workspace:ro" \
+          -v "$RUNNER_TEMP/chainsentry:/output" \
+          -v trivy-cache:/root/.cache \
+          aquasec/trivy:latest fs /workspace \
+          --format cyclonedx --output /output/sbom.cdx.json
+        echo "sbom-path=$RUNNER_TEMP/chainsentry/sbom.cdx.json" >> "$GITHUB_OUTPUT"
+
+    - name: Evaluate policy gate
+      id: gate
+      shell: bash
+      env:
+        FAIL_ON_SEVERITY: ${{ inputs.fail-on-severity }}
+        FAIL_ON_KEV: ${{ inputs.fail-on-kev }}
+      run: |
+        python3 "${{ github.action_path }}/gate.py" \
+          --report "$RUNNER_TEMP/chainsentry/trivy-fs.json" \
+          --fail-on-severity "$FAIL_ON_SEVERITY" \
+          --fail-on-kev "$FAIL_ON_KEV"
+
+    - name: Upload results to ChainSentry platform
+      if: ${{ inputs.upload-url != '' }}
+      shell: bash
+      run: |
+        curl -sf -X POST "${{ inputs.upload-url }}/api/v1/scans/upload" \
+          -H "Authorization: Bearer ${{ inputs.upload-token }}" \
+          -H "Content-Type: application/json" \
+          --data-binary @"$RUNNER_TEMP/chainsentry/trivy-fs.json"

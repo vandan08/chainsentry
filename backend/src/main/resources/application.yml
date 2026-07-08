@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: chainsentry
+  threads:
+    virtual:
+      enabled: true   # scanner runs are long-blocking; one virtual thread per run
+  datasource:
+    url: jdbc:postgresql://localhost:5432/chainsentry
+    username: chainsentry
+    password: chainsentry_dev
+  jpa:
+    hibernate:
+      ddl-auto: validate   # schema is owned by Flyway, never by Hibernate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+chainsentry:
+  scanner:
+    default-timeout: 10m
+    images:
+      trivy: aquasec/trivy:latest
+      semgrep: semgrep/semgrep:latest
+      dependency-check: owasp/dependency-check:latest
+  feeds:
+    epss-url: https://epss.empiricalsecurity.com/epss_scores-current.csv.gz
+    kev-url: https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
+  # GitHub App credentials live in application-local.yml (gitignored) — see docs/07-GITHUB-APP-SETUP.md

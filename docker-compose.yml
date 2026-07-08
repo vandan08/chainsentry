@@ -1,0 +1,39 @@
+name: chainsentry
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chainsentry-postgres
+    environment:
+      POSTGRES_DB: chainsentry
+      POSTGRES_USER: chainsentry
+      POSTGRES_PASSWORD: chainsentry_dev   # dev only — override in prod
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chainsentry"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: chainsentry-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Scanner engines are pulled on demand by the orchestrator, but you can
+  # pre-pull them for faster first scans:
+  #   docker pull aquasec/trivy:latest
+  #   docker pull semgrep/semgrep:latest
+  #   docker pull owasp/dependency-check:latest
+
+volumes:
+  pgdata:
