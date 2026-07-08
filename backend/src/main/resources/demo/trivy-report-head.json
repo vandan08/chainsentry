@@ -1,0 +1,172 @@
+{
+  "SchemaVersion": 2,
+  "CreatedAt": "2026-07-08T09:41:07Z",
+  "ArtifactName": "/workspace",
+  "ArtifactType": "filesystem",
+  "Results": [
+    {
+      "Target": "pom.xml",
+      "Class": "lang-pkgs",
+      "Type": "pom",
+      "Packages": [
+        {
+          "ID": "com.fasterxml.jackson.core:jackson-databind:2.13.0",
+          "Name": "com.fasterxml.jackson.core:jackson-databind",
+          "Version": "2.13.0",
+          "Relationship": "direct",
+          "Identifier": { "PURL": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0" }
+        },
+        {
+          "ID": "com.google.guava:guava:31.0-jre",
+          "Name": "com.google.guava:guava",
+          "Version": "31.0-jre",
+          "Relationship": "indirect",
+          "Identifier": { "PURL": "pkg:maven/com.google.guava/guava@31.0-jre" }
+        },
+        {
+          "ID": "commons-io:commons-io:2.15.1",
+          "Name": "commons-io:commons-io",
+          "Version": "2.15.1",
+          "Relationship": "direct",
+          "Identifier": { "PURL": "pkg:maven/commons-io/commons-io@2.15.1" }
+        },
+        {
+          "ID": "org.springframework:spring-web:6.1.0",
+          "Name": "org.springframework:spring-web",
+          "Version": "6.1.0",
+          "Relationship": "direct",
+          "Identifier": { "PURL": "pkg:maven/org.springframework/spring-web@6.1.0" }
+        },
+        {
+          "ID": "com.acme:audit-logging-starter:1.0.0",
+          "Name": "com.acme:audit-logging-starter",
+          "Version": "1.0.0",
+          "Relationship": "direct",
+          "Identifier": { "PURL": "pkg:maven/com.acme/audit-logging-starter@1.0.0" }
+        },
+        {
+          "ID": "org.apache.logging.log4j:log4j-core:2.14.1",
+          "Name": "org.apache.logging.log4j:log4j-core",
+          "Version": "2.14.1",
+          "Relationship": "indirect",
+          "Identifier": { "PURL": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" }
+        },
+        {
+          "ID": "org.yaml:snakeyaml:1.30",
+          "Name": "org.yaml:snakeyaml",
+          "Version": "1.30",
+          "Relationship": "indirect",
+          "Identifier": { "PURL": "pkg:maven/org.yaml/snakeyaml@1.30" }
+        }
+      ],
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2021-44228",
+          "PkgID": "org.apache.logging.log4j:log4j-core:2.14.1",
+          "PkgName": "org.apache.logging.log4j:log4j-core",
+          "PkgIdentifier": { "PURL": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" },
+          "InstalledVersion": "2.14.1",
+          "FixedVersion": "2.15.0, 2.3.1, 2.12.2",
+          "Status": "fixed",
+          "Severity": "CRITICAL",
+          "Title": "log4j-core: remote code execution via JNDI lookup in log messages (Log4Shell)",
+          "Description": "Apache Log4j2 JNDI features used in configuration, log messages, and parameters do not protect against attacker controlled LDAP and other JNDI related endpoints. An attacker who can control log messages or log message parameters can execute arbitrary code loaded from LDAP servers.",
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+              "V3Score": 10.0
+            }
+          },
+          "References": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+            "https://logging.apache.org/log4j/2.x/security.html"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2021-45046",
+          "PkgID": "org.apache.logging.log4j:log4j-core:2.14.1",
+          "PkgName": "org.apache.logging.log4j:log4j-core",
+          "PkgIdentifier": { "PURL": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1" },
+          "InstalledVersion": "2.14.1",
+          "FixedVersion": "2.16.0, 2.12.2",
+          "Status": "fixed",
+          "Severity": "CRITICAL",
+          "Title": "log4j-core: incomplete fix of CVE-2021-44228 in certain non-default configurations",
+          "Description": "It was found that the fix to address CVE-2021-44228 in Apache Log4j 2.15.0 was incomplete in certain non-default configurations, allowing attackers with control over Thread Context Map input data to craft malicious input using a JNDI lookup pattern.",
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:H",
+              "V3Score": 9.0
+            }
+          },
+          "References": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2021-45046"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2022-1471",
+          "PkgID": "org.yaml:snakeyaml:1.30",
+          "PkgName": "org.yaml:snakeyaml",
+          "PkgIdentifier": { "PURL": "pkg:maven/org.yaml/snakeyaml@1.30" },
+          "InstalledVersion": "1.30",
+          "FixedVersion": "2.0",
+          "Status": "fixed",
+          "Severity": "CRITICAL",
+          "Title": "snakeyaml: constructor deserialization allows remote code execution",
+          "Description": "SnakeYaml's Constructor() class does not restrict types which can be instantiated during deserialization. Deserializing yaml content provided by an attacker can lead to remote code execution.",
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "V3Score": 9.8
+            }
+          },
+          "References": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2022-1471"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2020-36518",
+          "PkgID": "com.fasterxml.jackson.core:jackson-databind:2.13.0",
+          "PkgName": "com.fasterxml.jackson.core:jackson-databind",
+          "PkgIdentifier": { "PURL": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0" },
+          "InstalledVersion": "2.13.0",
+          "FixedVersion": "2.12.6.1, 2.13.2.1",
+          "Status": "fixed",
+          "Severity": "HIGH",
+          "Title": "jackson-databind: denial of service via a large depth of nested objects",
+          "Description": "jackson-databind before 2.13.2.1 allows a Java StackOverflowError and denial of service via a large depth of nested objects.",
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "V3Score": 7.5
+            }
+          },
+          "References": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2020-36518"
+          ]
+        },
+        {
+          "VulnerabilityID": "CVE-2023-2976",
+          "PkgID": "com.google.guava:guava:31.0-jre",
+          "PkgName": "com.google.guava:guava",
+          "PkgIdentifier": { "PURL": "pkg:maven/com.google.guava/guava@31.0-jre" },
+          "InstalledVersion": "31.0-jre",
+          "FixedVersion": "32.0.0-android",
+          "Status": "fixed",
+          "Severity": "MEDIUM",
+          "Title": "guava: insecure temporary directory usage in FileBackedOutputStream",
+          "Description": "Use of Java's default temporary directory for file creation in FileBackedOutputStream in Google Guava allows other users and apps on the machine with access to the default temporary directory to read the created files.",
+          "CVSS": {
+            "nvd": {
+              "V3Vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:N",
+              "V3Score": 5.5
+            }
+          },
+          "References": [
+            "https://nvd.nist.gov/vuln/detail/CVE-2023-2976"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:8c4f9d21-6a3e-47b8-9e02-bf5c11d84a3d",
+  "version": 1,
+  "metadata": {
+    "timestamp": "2026-07-08T09:41:07Z",
+    "component": {
+      "bom-ref": "pkg:maven/com.acme/payment-service@1.5.0-SNAPSHOT",
+      "type": "application",
+      "group": "com.acme",
+      "name": "payment-service",
+      "version": "1.5.0-SNAPSHOT",
+      "purl": "pkg:maven/com.acme/payment-service@1.5.0-SNAPSHOT"
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0",
+      "type": "library",
+      "group": "com.fasterxml.jackson.core",
+      "name": "jackson-databind",
+      "version": "2.13.0",
+      "purl": "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "pkg:maven/com.google.guava/guava@31.0-jre",
+      "type": "library",
+      "group": "com.google.guava",
+      "name": "guava",
+      "version": "31.0-jre",
+      "purl": "pkg:maven/com.google.guava/guava@31.0-jre",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "pkg:maven/commons-io/commons-io@2.15.1",
+      "type": "library",
+      "group": "commons-io",
+      "name": "commons-io",
+      "version": "2.15.1",
+      "purl": "pkg:maven/commons-io/commons-io@2.15.1",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "pkg:maven/org.springframework/spring-web@6.1.0",
+      "type": "library",
+      "group": "org.springframework",
+      "name": "spring-web",
+      "version": "6.1.0",
+      "purl": "pkg:maven/org.springframework/spring-web@6.1.0",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "pkg:maven/com.acme/audit-logging-starter@1.0.0",
+      "type": "library",
+      "group": "com.acme",
+      "name": "audit-logging-starter",
+      "version": "1.0.0",
+      "purl": "pkg:maven/com.acme/audit-logging-starter@1.0.0"
+    },
+    {
+      "bom-ref": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "type": "library",
+      "group": "org.apache.logging.log4j",
+      "name": "log4j-core",
+      "version": "2.14.1",
+      "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    },
+    {
+      "bom-ref": "pkg:maven/org.yaml/snakeyaml@1.30",
+      "type": "library",
+      "group": "org.yaml",
+      "name": "snakeyaml",
+      "version": "1.30",
+      "purl": "pkg:maven/org.yaml/snakeyaml@1.30",
+      "licenses": [{ "license": { "id": "Apache-2.0" } }]
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:maven/com.acme/payment-service@1.5.0-SNAPSHOT",
+      "dependsOn": [
+        "pkg:maven/com.fasterxml.jackson.core/jackson-databind@2.13.0",
+        "pkg:maven/commons-io/commons-io@2.15.1",
+        "pkg:maven/org.springframework/spring-web@6.1.0",
+        "pkg:maven/com.acme/audit-logging-starter@1.0.0"
+      ]
+    },
+    {
+      "ref": "pkg:maven/org.springframework/spring-web@6.1.0",
+      "dependsOn": ["pkg:maven/com.google.guava/guava@31.0-jre"]
+    },
+    {
+      "ref": "pkg:maven/com.acme/audit-logging-starter@1.0.0",
+      "dependsOn": [
+        "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+        "pkg:maven/org.yaml/snakeyaml@1.30"
+      ]
+    }
+  ]
+}
