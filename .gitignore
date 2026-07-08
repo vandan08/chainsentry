@@ -27,6 +27,10 @@ Thumbs.db
 application-local.yml
 secrets/
 
+## Machine-local dev config
+.claude/launch.json
+docker-compose.override.yml
+
 ## Node (dashboard, later phase)
 node_modules/
 dist/

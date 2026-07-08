@@ -16,6 +16,11 @@ Supply-chain security platform (portfolio project): scans code/deps/containers i
 
 ## Build & test
 ```
-cd backend && mvn verify        # unit tests only so far
+cd backend && mvn verify        # 48 unit tests, Docker-free
 ```
-Integration tests (Testcontainers) arrive in Phase 1 — tag them separately so plain `mvn test` stays Docker-free.
+Integration tests (Testcontainers) still TODO — tag them separately so plain `mvn test` stays Docker-free.
+
+## Gotchas (learned the hard way)
+- **Spring Boot 4 modularized auto-configuration**: Flyway needs `spring-boot-flyway`, `RestClient.Builder` needs `spring-boot-restclient` on the classpath — `flyway-core` alone silently never migrates.
+- **Jackson 3** (`tools.jackson.*`) is what Boot 4 resolves; use `tools.jackson.dataformat:jackson-dataformat-yaml`, not the `com.fasterxml` one (that drags in a second databind).
+- Demo mode: `mvn spring-boot:run -Dspring-boot.run.profiles=demo` seeds two fixture scans + dashboard at `/`. On this machine ports 5432/8080 are taken by other projects — add the `local` profile (gitignored overrides: Postgres 5433, server 8081).

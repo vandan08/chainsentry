@@ -11,40 +11,42 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [x] CI workflow (build + test)
 - [x] Risk score calculator with unit tests (the differentiator, testable from day one)
 
-## Phase 1 — Scan pipeline MVP (~2 weeks) → `v0.1.0`
-**Demo: point ChainSentry at a vulnerable repo, get deduped risk-ranked findings via REST.**
-- [ ] `ScannerEngine` SPI + Trivy adapter (Docker Java client, mounted workspace, timeout)
-- [ ] Git clone service (shallow clone into ephemeral workspace)
-- [ ] Scan job lifecycle: PENDING → RUNNING → COMPLETED/FAILED, persisted
-- [ ] Trivy JSON → unified Finding normalization + fingerprinting
-- [ ] `POST /repos/{id}/scans`, `GET /scans/{id}`, `GET /scans/{id}/findings`
+## Phase 1 — Scan pipeline MVP ✅ (POC vertical slice, shipped with parts of P2/P3 below)
+**Demo: `mvn spring-boot:run -Dspring-boot.run.profiles=demo` → risk-ranked findings, gate verdict, SBOM delta, dashboard.**
+- [x] `ScannerEngine` SPI + Trivy adapter (`docker run` via ProcessBuilder, read-only mount, hard timeout)
+- [x] Git clone service (shallow clone into ephemeral workspace)
+- [x] Scan job lifecycle: PENDING → RUNNING → COMPLETED/FAILED, persisted
+- [x] Trivy JSON → unified Finding normalization + fingerprinting + scope inference
+- [x] `POST /repos/{id}/scans`, `GET /scans/{id}`, `GET /scans/{id}/findings`, `GET /scans/{id}/gate`
+- [x] Demo profile: recorded Trivy/CycloneDX fixtures through the real pipeline, frozen EPSS/KEV snapshot, seeded PASS + FAIL scans
 - [ ] Testcontainers integration test: scan a fixture project with a known CVE (e.g. log4j-core 2.14.1), assert the finding
-- [ ] Golden-file tests for normalization
+- [x] Golden-file tests for normalization (48 unit tests, Docker-free `mvn verify`)
 
-## Phase 2 — Multi-engine + risk engine (~2 weeks) → `v0.2.0`
+## Phase 2 — Multi-engine + risk engine → `v0.2.0`
 **Demo: same CVE from two engines = one finding; KEV CVE outranks a plain critical.**
-- [ ] Semgrep + Dependency-Check adapters; parallel fan-out on virtual threads
-- [ ] Cross-engine dedup (FINDING_SOURCE)
-- [ ] EPSS + KEV feed sync jobs (scheduled, cached in Redis, stored in VULNERABILITY)
-- [ ] Composite risk scoring wired into persistence; re-rank on feed updates
-- [ ] SBOM generation (Trivy CycloneDX) + storage + `GET /scans/{id}/sbom`
+- [ ] Semgrep + Dependency-Check adapters (fan-out on virtual threads already in place)
+- [x] Cross-engine dedup (FINDING_SOURCE) — fingerprint collapse + per-engine sources
+- [x] EPSS + KEV feed sync jobs (scheduled daily, opt-in, stored in VULNERABILITY; Redis caching still TODO)
+- [x] Composite risk scoring wired into persistence (org-overridable weights)
+- [ ] Re-rank persisted findings when feeds update
+- [x] SBOM storage (CycloneDX) + `GET /scans/{id}/sbom` (Trivy CycloneDX generator behind `SbomGenerator` SPI)
 
 ## Phase 3 — GitHub App + policy gate (~2–3 weeks) → `v0.3.0`  ⭐ the money demo
 **Demo: open a PR adding log4j 2.14.1 → red Check Run + rich PR comment in 90 seconds.**
 - [ ] GitHub App registration, webhook endpoint, HMAC verification, delivery dedup
 - [ ] Installation token service (JWT → token, cached)
 - [ ] PR/push events → scan trigger; Checks API run with annotations
-- [ ] `chainsentry.yml` parser + policy gate evaluation
-- [ ] SBOM diff (base vs head) + PR summary comment ("supply-chain delta")
+- [x] `chainsentry.yml` parser + policy gate evaluation (per-rule verdicts with offenders; repo file > platform default)
+- [x] SBOM diff (base vs head) — `GET /sboms/diff` with vuln-annotated added/changed/removed (PR comment still TODO)
 - [ ] Suppressions with expiry + OpenVEX statement generation
 
 ## Phase 4 — GitHub Action + dashboard (~2–3 weeks) → `v0.4.0`
 **Demo: `uses: <you>/chainsentry-action@v1` in any workflow; dashboard shows trend.**
-- [ ] Composite Action: run engines in the runner, normalize, evaluate policy locally, fail on breach
+- [x] Composite Action: Trivy in the runner + `gate.py` (severity budgets, real KEV membership via CISA catalog)
 - [ ] Optional upload to platform (`/scans/upload`) for history
 - [ ] SARIF output → GitHub code scanning tab
-- [ ] React dashboard: org overview, repo findings (risk-sorted), scan detail, trend chart
-- [ ] GitHub OAuth login
+- [x] Dashboard (static, no build step): scans, risk-ranked findings, gate detail, SBOM delta — served at `/`
+- [ ] React dashboard with org overview + trend chart; GitHub OAuth login
 
 ## Phase 5 — AI remediation (~1–2 weeks) → `v0.5.0`
 **Demo: click "explain" → contextual explanation; click "fix" → draft upgrade PR appears.**

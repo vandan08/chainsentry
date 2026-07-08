@@ -80,22 +80,51 @@ chainsentry/
 └── .github/workflows/  CI for this repo itself
 ```
 
-## Quick start (development)
+## Quick start — see the whole thing in 30 seconds
 
 ```bash
-# 1. Infrastructure
+# 1. Infrastructure (Postgres + Redis)
 docker compose up -d
 
-# 2. Backend (needs JDK 24+, see docs/08-DEV-SETUP.md)
+# 2. Demo mode (needs JDK 24+, see docs/08-DEV-SETUP.md — no scanner engines required)
 cd backend
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-API comes up on `http://localhost:8080`, health at `/actuator/health`.
+Open **`http://localhost:8080/`**. The demo profile replays recorded Trivy
+reports through the real pipeline and seeds two scans of a fictional
+`acme/payment-service`:
+
+- a push to `main` — two modest findings, gate **PASS** ✅
+- PR #42 ("add audit logging") — an innocent-looking internal starter drags in
+  `log4j-core 2.14.1`, gate **FAIL** ❌
+
+The dashboard shows what makes ChainSentry different: snakeyaml's CVSS-9.8
+CRITICAL ranks at **0.38** (no known exploitation, transitive), while both
+KEV-listed log4j CVEs rank above **0.93** — and the gate names the exact rules
+and findings that blocked the merge. The **supply-chain delta** panel shows
+precisely what the PR is about to merge.
+
+Without the demo profile, scans run real Trivy containers against shallow
+clones — same pipeline, same policy engine (`mvn spring-boot:run`, Docker
+required).
+
+```
+POST /api/v1/repos/{id}/scans          trigger a scan
+GET  /api/v1/scans/{id}                status + severity counts + gate result
+GET  /api/v1/scans/{id}/findings       risk-ranked findings
+GET  /api/v1/scans/{id}/gate           which policy rule fired, and on what
+GET  /api/v1/scans/{id}/sbom           CycloneDX document
+GET  /api/v1/sboms/diff?base=&head=    the PR supply-chain delta
+```
 
 ## Project status
 
-🚧 **In active development.** See the [roadmap](docs/06-ROADMAP.md) for the phased plan (MVP → GitHub App → risk engine → dashboard → AI remediation).
+🧪 **Working POC** — scan pipeline, normalization + dedup, EPSS/KEV-driven
+risk ranking, policy-as-code gate, SBOM diff, demo dashboard, and a CI gate
+with real CISA-KEV membership checks all work end to end. See the
+[roadmap](docs/06-ROADMAP.md) for what's shipped vs next (multi-engine,
+GitHub App, AI remediation).
 
 ## Docs
 

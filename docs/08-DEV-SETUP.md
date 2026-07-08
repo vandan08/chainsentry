@@ -35,6 +35,36 @@ mvn spring-boot:run
 
 Verify: `http://localhost:8080/actuator/health` → `{"status":"UP"}`.
 
+## Demo mode — the 30-second demo, no scanner engines needed
+
+The `demo` profile replays recorded Trivy reports through the **real** pipeline
+(normalization → dedup → risk scoring → policy gate → SBOM), seeds a frozen
+EPSS/KEV snapshot, and runs two scans of a fictional `acme/payment-service` on
+startup: a clean-ish push to `main` (gate **PASS**) and PR #42 that pulls in
+log4j-core 2.14.1 (gate **FAIL**).
+
+```powershell
+docker compose up -d
+cd backend
+mvn spring-boot:run "-Dspring-boot.run.profiles=demo"
+```
+
+Then open `http://localhost:8080/` — the dashboard shows both scans,
+risk-ranked findings, the gate verdict with the exact rules that fired, and
+the PR's supply-chain delta. Only container execution is canned; a real Trivy
+run (non-demo profile) needs Docker and uses the same code path.
+
+### Port conflicts
+
+If 5432 or 8080 are taken on your machine (they are on this one), override
+locally — both files are gitignored:
+
+- `docker-compose.override.yml` at the repo root remaps Postgres
+  (`ports: !override` → `"5433:5432"`).
+- `backend/src/main/resources/application-local.yml` sets the matching
+  `spring.datasource.url` and `server.port`; add `local` to the active
+  profiles: `-Dspring-boot.run.profiles=demo,local`.
+
 ## Configuration
 
 - Defaults live in `backend/src/main/resources/application.yml` and work with the compose services out of the box.
