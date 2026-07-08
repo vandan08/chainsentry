@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChainSentry</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb;      /* card / chart surface */
+    --plane: #f9f9f7;          /* page plane */
+    --ink-1: #0b0b0b;
+    --ink-2: #52514e;
+    --ink-3: #898781;
+    --hairline: #e1e0d9;
+    --border: rgba(11, 11, 11, 0.10);
+    --risk-bar: #2a78d6;       /* sequential blue: length encodes, color constant */
+    --risk-track: #f0efec;
+    --status-good: #0ca30c;
+    --status-warning: #fab219;
+    --status-serious: #ec835a;
+    --status-critical: #d03b3b;
+    --good-text: #006300;
+    --critical-text: #b02a2a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --plane: #0d0d0d;
+      --ink-1: #ffffff;
+      --ink-2: #c3c2b7;
+      --ink-3: #898781;
+      --hairline: #2c2c2a;
+      --border: rgba(255, 255, 255, 0.10);
+      --risk-bar: #3987e5;
+      --risk-track: #2c2c2a;
+      --good-text: #0ca30c;
+      --critical-text: #e66767;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--plane);
+    color: var(--ink-1);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
+
+  /* ── header ─────────────────────────────────────────── */
+  header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .wordmark { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .wordmark .glyph { color: var(--risk-bar); }
+  #repo-name { color: var(--ink-2); font-size: 14px; }
+  header .spacer { flex: 1; }
+  .subtle { color: var(--ink-3); font-size: 12px; }
+
+  /* ── scan picker ────────────────────────────────────── */
+  .scans { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .scan-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    min-width: 240px;
+    text-align: left;
+    color: inherit;
+    font: inherit;
+  }
+  .scan-card:hover { border-color: var(--ink-3); }
+  .scan-card.selected { border-color: var(--risk-bar); box-shadow: 0 0 0 1px var(--risk-bar); }
+  .scan-card .row1 { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+  .scan-card .row2 { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+  .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+
+  /* ── stat tiles ─────────────────────────────────────── */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .tile .label { color: var(--ink-3); font-size: 12px; }
+  .tile .value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 2px; }
+  .tile .note { color: var(--ink-2); font-size: 12px; }
+
+  /* ── panels ─────────────────────────────────────────── */
+  section { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+  section h2 { font-size: 13px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+  /* status chips: colored dot + text label — never color alone */
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 999px; padding: 1px 9px 1px 7px; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .chip .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .gate-badge { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+
+  /* gate rules */
+  .rule { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--hairline); align-items: baseline; }
+  .rule:first-of-type { border-top: none; }
+  .rule .verdict { flex: none; width: 18px; text-align: center; font-weight: 700; }
+  .rule .body { flex: 1; }
+  .rule .rule-id { font-weight: 600; margin-right: 8px; }
+  .rule .msg { color: var(--ink-2); }
+  .rule .offenders { color: var(--ink-3); font-size: 12px; margin-top: 2px; }
+
+  /* ── findings table ─────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--ink-3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--hairline); }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:hover { background: color-mix(in srgb, var(--risk-bar) 5%, transparent); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .risk-cell { display: flex; align-items: center; gap: 8px; min-width: 130px; }
+  .risk-track { flex: 1; height: 6px; border-radius: 3px; background: var(--risk-track); overflow: hidden; }
+  .risk-fill { height: 100%; border-radius: 3px; background: var(--risk-bar); }
+  .risk-value { font-variant-numeric: tabular-nums; font-weight: 600; width: 42px; text-align: right; }
+  .vuln-id { font-weight: 600; }
+  .kev-flag { color: var(--critical-text); font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .pkg { color: var(--ink-2); }
+  .fix { color: var(--good-text); }
+  .muted { color: var(--ink-3); }
+
+  /* ── sbom delta ─────────────────────────────────────── */
+  .delta-group { margin-top: 10px; }
+  .delta-group h3 { font-size: 12px; color: var(--ink-3); font-weight: 600; margin-bottom: 4px; }
+  .delta-row { display: flex; gap: 10px; padding: 6px 0; border-top: 1px solid var(--hairline); align-items: baseline; flex-wrap: wrap; }
+  .delta-sign { flex: none; width: 16px; text-align: center; font-weight: 700; }
+  .sign-add { color: var(--good-text); }
+  .sign-del { color: var(--critical-text); }
+  .sign-chg { color: var(--ink-2); }
+  .delta-annotations { color: var(--ink-3); font-size: 12px; flex-basis: 100%; padding-left: 26px; }
+
+  .empty { color: var(--ink-3); padding: 12px 0; }
+  footer { color: var(--ink-3); font-size: 12px; margin-top: 8px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="wordmark"><span class="glyph">⛨</span> ChainSentry</div>
+    <div id="repo-name">loading…</div>
+    <div class="spacer"></div>
+    <div class="subtle">risk = CVSS × EPSS × KEV × scope</div>
+  </header>
+
+  <div class="scans" id="scan-list"></div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <section id="gate-panel">
+    <h2>Policy gate</h2>
+    <div id="gate-rules" class="empty">Select a scan.</div>
+  </section>
+
+  <section>
+    <h2>Findings — ranked by exploitation risk, not CVSS</h2>
+    <div style="overflow-x:auto">
+      <table id="findings-table" hidden>
+        <thead>
+          <tr>
+            <th>Risk</th><th>Severity</th><th>Vulnerability</th><th>Package</th>
+            <th>Scope</th><th>Fix</th><th>EPSS</th><th>Engines</th>
+          </tr>
+        </thead>
+        <tbody id="findings-body"></tbody>
+      </table>
+    </div>
+    <div id="findings-empty" class="empty">No scan selected.</div>
+  </section>
+
+  <section id="delta-panel" hidden>
+    <h2>Supply-chain delta <span class="subtle" id="delta-context"></span></h2>
+    <div id="delta-body"></div>
+  </section>
+
+  <footer>ChainSentry POC — <a href="/actuator/health">health</a> · API under <span class="mono">/api/v1</span></footer>
+</main>
+
+<script>
+(() => {
+  "use strict";
+  const api = (path) => fetch("/api/v1" + path).then(r => {
+    if (!r.ok) throw new Error(path + " → " + r.status);
+    return r.json();
+  });
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const SEVERITY_COLOR = {
+    CRITICAL: "var(--status-critical)",
+    HIGH: "var(--status-serious)",
+    MEDIUM: "var(--status-warning)",
+    LOW: "var(--ink-3)",
+    INFO: "var(--ink-3)"
+  };
+  const GATE = {
+    PASS: { icon: "✓", color: "var(--good-text)", label: "PASS" },
+    WARN: { icon: "△", color: "var(--status-warning)", label: "WARN" },
+    FAIL: { icon: "✕", color: "var(--critical-text)", label: "FAIL" }
+  };
+  const SCOPE_LABEL = {
+    DIRECT_RUNTIME: "direct · runtime",
+    TRANSITIVE_RUNTIME: "transitive · runtime",
+    DIRECT_TEST: "direct · test",
+    TRANSITIVE_TEST: "transitive · test"
+  };
+
+  const severityChip = (sev) =>
+    `<span class="chip"><span class="dot" style="background:${SEVERITY_COLOR[sev] || "var(--ink-3)"}"></span>${esc(sev)}</span>`;
+  const gateBadge = (g) => {
+    const spec = GATE[g] || { icon: "…", color: "var(--ink-3)", label: g || "PENDING" };
+    return `<span class="gate-badge" style="color:${spec.color}">${spec.icon} ${spec.label}</span>`;
+  };
+  const shortPurl = (purl) => {
+    if (!purl) return "";
+    const m = purl.match(/^pkg:[^/]+\/(.+)@([^@?]+)/);
+    return m ? m[1].split("/").pop() + " @ " + m[2] : purl;
+  };
+
+  let scans = [];
+
+  async function boot() {
+    const repos = await api("/repos");
+    if (!repos.length) { document.getElementById("repo-name").textContent = "no repositories"; return; }
+    const repo = repos[0];
+    document.getElementById("repo-name").textContent = repo.fullName;
+    scans = await api(`/repos/${repo.id}/scans`);
+    renderScanCards();
+    if (scans.length) select(scans[0].id);
+  }
+
+  function renderScanCards() {
+    document.getElementById("scan-list").innerHTML = scans.map(s => `
+      <button class="scan-card" id="card-${s.id}" onclick="window.__select('${s.id}')">
+        <div class="row1">
+          ${gateBadge(s.gateResult)}
+          <span class="mono">${esc(s.commitSha.slice(0, 8))}</span>
+          <span class="subtle">${s.trigger === "PR" ? "PR #" + esc(s.prNumber) : esc(s.trigger.toLowerCase())}</span>
+        </div>
+        <div class="row2">${esc(s.ref || "")} · ${s.totalFindings} finding${s.totalFindings === 1 ? "" : "s"}</div>
+      </button>`).join("");
+  }
+
+  async function select(scanId) {
+    document.querySelectorAll(".scan-card").forEach(c => c.classList.remove("selected"));
+    const card = document.getElementById("card-" + scanId);
+    if (card) card.classList.add("selected");
+
+    const scan = scans.find(s => s.id === scanId);
+    const [findings, gate] = await Promise.all([
+      api(`/scans/${scanId}/findings`),
+      api(`/scans/${scanId}/gate`)
+    ]);
+    renderTiles(scan, findings);
+    renderGate(gate);
+    renderFindings(findings);
+    renderDelta(scan).catch(() => { document.getElementById("delta-panel").hidden = true; });
+  }
+  window.__select = select;
+
+  function renderTiles(scan, findings) {
+    const bySev = scan.findingsBySeverity || {};
+    const kevCount = findings.filter(f => f.vulnerability && f.vulnerability.knownExploited).length;
+    const engineNote = (scan.engines || []).map(e => e.engine.toLowerCase() + " " + (e.durationMs ?? "–") + "ms").join(" · ");
+    document.getElementById("tiles").innerHTML = `
+      <div class="tile"><div class="label">Gate</div><div class="value">${gateBadge(scan.gateResult)}</div>
+        <div class="note">${esc(scan.status.toLowerCase())} · ${engineNote || "no engine runs"}</div></div>
+      <div class="tile"><div class="label">Findings</div><div class="value">${scan.totalFindings}</div>
+        <div class="note">${bySev.CRITICAL || 0} critical · ${bySev.HIGH || 0} high · ${bySev.MEDIUM || 0} medium</div></div>
+      <div class="tile"><div class="label">Actively exploited (KEV)</div>
+        <div class="value" style="color:${kevCount ? "var(--critical-text)" : "inherit"}">${kevCount}</div>
+        <div class="note">CISA Known Exploited Vulnerabilities</div></div>
+      <div class="tile"><div class="label">Top risk score</div><div class="value">${scan.topRiskScore.toFixed(2)}</div>
+        <div class="note">composite, 0–1</div></div>`;
+  }
+
+  function renderGate(gate) {
+    document.getElementById("gate-rules").innerHTML = gate.rules.map(r => {
+      const verdict = r.passed
+        ? `<span class="verdict" style="color:var(--good-text)">✓</span>`
+        : `<span class="verdict" style="color:${r.level === "WARN" ? "var(--status-warning)" : "var(--critical-text)"}">${r.level === "WARN" ? "△" : "✕"}</span>`;
+      const offenders = r.offenders && r.offenders.length
+        ? `<div class="offenders">${r.offenders.map(esc).join("<br>")}</div>` : "";
+      return `<div class="rule">${verdict}<div class="body">
+                <span class="rule-id">${esc(r.rule)}</span><span class="msg">${esc(r.message)}</span>${offenders}
+              </div></div>`;
+    }).join("");
+  }
+
+  function renderFindings(findings) {
+    const table = document.getElementById("findings-table");
+    const empty = document.getElementById("findings-empty");
+    if (!findings.length) {
+      table.hidden = true;
+      empty.hidden = false;
+      empty.textContent = "No findings — clean scan.";
+      return;
+    }
+    table.hidden = false;
+    empty.hidden = true;
+    document.getElementById("findings-body").innerHTML = findings.map(f => {
+      const v = f.vulnerability || {};
+      const kev = v.knownExploited ? `<div class="kev-flag">⚠ KEV — actively exploited</div>` : "";
+      return `<tr title="${esc(v.summary || f.title || "")}">
+        <td><div class="risk-cell">
+          <div class="risk-track"><div class="risk-fill" style="width:${Math.round(f.riskScore * 100)}%"></div></div>
+          <span class="risk-value">${f.riskScore.toFixed(2)}</span>
+        </div></td>
+        <td>${severityChip(f.severity)}</td>
+        <td><span class="vuln-id">${esc(v.id || f.title || "—")}</span>${kev}
+            <div class="muted">${esc(f.title || "")}</div></td>
+        <td><span class="pkg">${esc(shortPurl(f.packageCoordinates))}</span></td>
+        <td class="muted">${esc(SCOPE_LABEL[f.dependencyScope] || "—")}</td>
+        <td>${f.fixedVersion ? `<span class="fix">${esc(f.fixedVersion)}</span>` : `<span class="muted">none</span>`}</td>
+        <td class="num">${v.epss != null ? (v.epss * 100).toFixed(1) + "%" : "—"}</td>
+        <td class="muted">${(f.sources || []).map(s => esc(s.engine.toLowerCase())).join(", ")}</td>
+      </tr>`;
+    }).join("");
+  }
+
+  async function renderDelta(scan) {
+    const panel = document.getElementById("delta-panel");
+    const older = scans.filter(s => s.createdAt < scan.createdAt)
+                       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0];
+    if (!older) { panel.hidden = true; return; }
+    const diff = await api(`/sboms/diff?base=${older.id}&head=${scan.id}`);
+    document.getElementById("delta-context").textContent =
+      ` — vs ${older.commitSha.slice(0, 8)} (${older.ref || older.trigger.toLowerCase()})`;
+
+    const annotate = (vulns) => vulns && vulns.length
+      ? `<div class="delta-annotations">${vulns.map(v =>
+          `${esc(v.vulnerabilityId)} · ${esc(v.severity)} · risk ${v.riskScore.toFixed(2)}${v.knownExploited ? " · ⚠ KEV" : ""}`
+        ).join("<br>")}</div>` : "";
+    const componentRow = (sign, cls, c, detail) => `
+      <div class="delta-row"><span class="delta-sign ${cls}">${sign}</span>
+        <span><strong>${esc(c.name)}</strong> <span class="muted">${esc(detail)}</span></span>
+        ${annotate(c.vulnerabilities)}
+      </div>`;
+
+    const groups = [];
+    if (diff.added.length) {
+      groups.push(`<div class="delta-group"><h3>Added (${diff.added.length})</h3>` +
+        diff.added.map(c => componentRow("+", "sign-add", c,
+          (c.version || "") + (c.direct === false ? " · transitive" : c.direct === true ? " · direct" : ""))).join("") + "</div>");
+    }
+    if (diff.changed.length) {
+      groups.push(`<div class="delta-group"><h3>Version changes (${diff.changed.length})</h3>` +
+        diff.changed.map(c => componentRow("↕", "sign-chg", c, `${c.baseVersion} → ${c.headVersion}`)).join("") + "</div>");
+    }
+    if (diff.removed.length) {
+      groups.push(`<div class="delta-group"><h3>Removed (${diff.removed.length})</h3>` +
+        diff.removed.map(c => componentRow("−", "sign-del", c, c.version || "")).join("") + "</div>");
+    }
+    document.getElementById("delta-body").innerHTML =
+      groups.join("") || `<div class="empty">No dependency changes between these scans.</div>`;
+    panel.hidden = false;
+  }
+
+  boot().catch(e => {
+    document.getElementById("repo-name").textContent = "API unreachable — is the backend up? (" + e.message + ")";
+  });
+})();
+</script>
+</body>
+</html>
