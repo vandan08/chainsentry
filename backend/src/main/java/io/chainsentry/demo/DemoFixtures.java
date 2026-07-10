@@ -1,5 +1,6 @@
 package io.chainsentry.demo;
 
+import io.chainsentry.shared.model.ScannerType;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -23,16 +24,23 @@ public class DemoFixtures {
     /** head of PR #42 ("add audit logging" — and, accidentally, Log4Shell). */
     public static final String HEAD_COMMIT = "e7b4d1f82c9a6e3b5d0f8c2a7e4b9d1c6f3a8e5b";
 
-    private static final Map<String, String> TRIVY_REPORTS = Map.of(
-            BASE_COMMIT, "demo/trivy-report-base.json",
-            HEAD_COMMIT, "demo/trivy-report-head.json");
+    private static final Map<ScannerType, Map<String, String>> REPORTS = Map.of(
+            ScannerType.TRIVY, Map.of(
+                    BASE_COMMIT, "demo/trivy-report-base.json",
+                    HEAD_COMMIT, "demo/trivy-report-head.json"),
+            ScannerType.SEMGREP, Map.of(
+                    BASE_COMMIT, "demo/semgrep-report-base.json",
+                    HEAD_COMMIT, "demo/semgrep-report-head.json"),
+            ScannerType.DEPENDENCY_CHECK, Map.of(
+                    BASE_COMMIT, "demo/dependency-check-report-base.json",
+                    HEAD_COMMIT, "demo/dependency-check-report-head.json"));
 
     private static final Map<String, String> SBOMS = Map.of(
             BASE_COMMIT, "demo/sbom-base.json",
             HEAD_COMMIT, "demo/sbom-head.json");
 
-    public String trivyReport(String commitSha) {
-        return load(TRIVY_REPORTS, commitSha);
+    public String report(ScannerType engine, String commitSha) {
+        return load(REPORTS.get(engine), commitSha);
     }
 
     public String sbom(String commitSha) {

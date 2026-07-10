@@ -23,7 +23,7 @@ public class RiskEnrichmentService {
     private final VulnerabilityRepository vulnerabilities;
     private final RiskScoreCalculator calculator;
 
-    RiskEnrichmentService(VulnerabilityRepository vulnerabilities, RiskScoreCalculator calculator) {
+    public RiskEnrichmentService(VulnerabilityRepository vulnerabilities, RiskScoreCalculator calculator) {
         this.vulnerabilities = vulnerabilities;
         this.calculator = calculator;
     }

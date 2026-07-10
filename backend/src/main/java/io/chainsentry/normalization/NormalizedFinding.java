@@ -28,8 +28,10 @@ public record NormalizedFinding(
         String cvssVector
 ) {
 
-    /** Dedup identity: same vulnerability on the same artifact at the same location. */
+    /** Dedup identity: package-keyed when a purl exists, location-keyed otherwise (SAST). */
     public String fingerprint() {
-        return FindingFingerprint.of(vulnerabilityId, purl, filePath);
+        return purl != null
+                ? FindingFingerprint.forPackage(vulnerabilityId, purl)
+                : FindingFingerprint.forLocation(engineRuleId, filePath, line);
     }
 }

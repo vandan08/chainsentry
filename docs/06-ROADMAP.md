@@ -22,13 +22,14 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [ ] Testcontainers integration test: scan a fixture project with a known CVE (e.g. log4j-core 2.14.1), assert the finding
 - [x] Golden-file tests for normalization (48 unit tests, Docker-free `mvn verify`)
 
-## Phase 2 — Multi-engine + risk engine → `v0.2.0`
+## Phase 2 — Multi-engine + risk engine ✅ → `v0.2.0`
 **Demo: same CVE from two engines = one finding; KEV CVE outranks a plain critical.**
-- [ ] Semgrep + Dependency-Check adapters (fan-out on virtual threads already in place)
-- [x] Cross-engine dedup (FINDING_SOURCE) — fingerprint collapse + per-engine sources
+- [x] Semgrep + Dependency-Check adapters (fan-out on virtual threads already in place)
+- [x] Cross-engine dedup (FINDING_SOURCE) — fingerprint collapse + per-engine sources; purl-keyed
+      fingerprints survive engines disagreeing on file paths, later engines gap-fill scope/fix data
 - [x] EPSS + KEV feed sync jobs (scheduled daily, opt-in, stored in VULNERABILITY; Redis caching still TODO)
 - [x] Composite risk scoring wired into persistence (org-overridable weights)
-- [ ] Re-rank persisted findings when feeds update
+- [x] Re-rank persisted findings when feeds update (`VulnerabilityFeedsUpdated` event → `FindingReRankService`)
 - [x] SBOM storage (CycloneDX) + `GET /scans/{id}/sbom` (Trivy CycloneDX generator behind `SbomGenerator` SPI)
 
 ## Phase 3 — GitHub App + policy gate (~2–3 weeks) → `v0.3.0`  ⭐ the money demo

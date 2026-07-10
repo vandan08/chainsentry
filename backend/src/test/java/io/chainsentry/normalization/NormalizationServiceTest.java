@@ -73,6 +73,42 @@ class NormalizationServiceTest {
     }
 
     @Test
+    void dedupSurvivesEnginesDisagreeingOnFilePath() {
+        // Trivy reports the lockfile, Dependency-Check the resolved jar — same CVE, same purl.
+        NormalizedFinding fromTrivy = log4shellFrom(ScannerType.TRIVY, 10.0);
+        NormalizedFinding fromDc = new NormalizedFinding(ScannerType.DEPENDENCY_CHECK, "CVE-2021-44228",
+                "CVE-2021-44228", FindingType.SCA, Severity.CRITICAL, "CVE-2021-44228", null, PURL,
+                "2.14.1", null, null, "target/dependency/log4j-core-2.14.1.jar", null, null, null);
+        NormalizationService service = new NormalizationService(List.of(
+                new StubNormalizer(ScannerType.TRIVY, List.of(fromTrivy)),
+                new StubNormalizer(ScannerType.DEPENDENCY_CHECK, List.of(fromDc))));
+
+        NormalizationResult result = service.normalize(SCAN_ID,
+                List.of(reportFor(ScannerType.TRIVY), reportFor(ScannerType.DEPENDENCY_CHECK)));
+
+        assertThat(result.findings()).hasSize(1);
+        assertThat(result.findings().getFirst().sources()).hasSize(2);
+    }
+
+    @Test
+    void laterEngineFillsPackageGapsButNeverOverwrites() {
+        // DC (no graph, no fix data) reports first; Trivy arrives with scope + fixed version.
+        NormalizedFinding sparse = new NormalizedFinding(ScannerType.DEPENDENCY_CHECK, "CVE-2021-44228",
+                "CVE-2021-44228", FindingType.SCA, Severity.CRITICAL, "CVE-2021-44228", null, PURL,
+                "2.14.1", null, null, "target/dependency/log4j-core-2.14.1.jar", null, null, null);
+        NormalizationService service = new NormalizationService(List.of(
+                new StubNormalizer(ScannerType.DEPENDENCY_CHECK, List.of(sparse)),
+                new StubNormalizer(ScannerType.TRIVY, List.of(log4shellFrom(ScannerType.TRIVY, 10.0)))));
+
+        NormalizationResult result = service.normalize(SCAN_ID,
+                List.of(reportFor(ScannerType.DEPENDENCY_CHECK), reportFor(ScannerType.TRIVY)));
+
+        Finding finding = result.findings().getFirst();
+        assertThat(finding.fixedVersion()).isEqualTo("2.15.0");
+        assertThat(finding.dependencyScope()).isEqualTo(DependencyScope.TRANSITIVE_RUNTIME);
+    }
+
+    @Test
     void differentCvesStayDistinct() {
         NormalizedFinding other = new NormalizedFinding(ScannerType.TRIVY, "CVE-2021-45046", "CVE-2021-45046",
                 FindingType.SCA, Severity.CRITICAL, "Log4Shell bypass", null, PURL, "2.14.1", "2.16.0",

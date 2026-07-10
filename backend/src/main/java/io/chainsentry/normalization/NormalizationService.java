@@ -49,6 +49,7 @@ public class NormalizationService {
                 f.locate(nf.filePath(), nf.line());
                 return f;
             });
+            finding.fillPackageGaps(nf.fixedVersion(), nf.scope());
             finding.addSource(new FindingSource(nf.engine(), nf.engineRuleId()));
         }
         return List.copyOf(byFingerprint.values());

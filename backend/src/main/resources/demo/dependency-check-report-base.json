@@ -1,0 +1,26 @@
+{
+  "reportSchema": "1.1",
+  "scanInfo": { "engineVersion": "12.1.0" },
+  "projectInfo": { "name": "acme/payment-service" },
+  "dependencies": [
+    {
+      "fileName": "guava-31.0-jre.jar",
+      "filePath": "/src/target/dependency/guava-31.0-jre.jar",
+      "packages": [
+        { "id": "pkg:maven/com.google.guava/guava@31.0-jre", "confidence": "HIGH" }
+      ],
+      "vulnerabilities": [
+        {
+          "source": "NVD",
+          "name": "CVE-2023-2976",
+          "severity": "MEDIUM",
+          "cvssv3": { "baseScore": 5.5, "attackVector": "LOCAL" },
+          "description": "Use of Java's default temporary directory for file creation in FileBackedOutputStream in Google Guava versions 1.0 to 31.1 allows other users and apps on the machine with access to the default Java temporary directory to access the files created by the class.",
+          "vulnerableSoftware": [
+            { "software": { "id": "cpe:2.3:a:google:guava:*:*:*:*:*:*:*:*", "versionEndExcluding": "32.0.0", "vulnerabilityIdMatched": "true" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

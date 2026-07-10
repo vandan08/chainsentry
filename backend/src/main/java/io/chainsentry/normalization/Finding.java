@@ -110,6 +110,20 @@ public class Finding {
         this.line = line;
     }
 
+    /**
+     * Later engines fill package gaps the first reporter left — never
+     * overwrite, so the more graph-aware engine's data wins regardless of
+     * report order.
+     */
+    public void fillPackageGaps(String fixedVersion, DependencyScope scope) {
+        if (this.fixedVersion == null) {
+            this.fixedVersion = fixedVersion;
+        }
+        if (this.dependencyScope == null) {
+            this.dependencyScope = scope;
+        }
+    }
+
     public void addSource(FindingSource source) {
         if (sources.stream().noneMatch(s -> s.engine() == source.engine())) {
             sources.add(source);

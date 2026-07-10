@@ -4,30 +4,31 @@ import io.chainsentry.scanner.RawReport;
 import io.chainsentry.scanner.ScanContext;
 import io.chainsentry.scanner.ScannerEngine;
 import io.chainsentry.shared.model.ScannerType;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.Instant;
 
 /**
- * Replays recorded Trivy reports keyed by commit SHA. The rest of the
- * pipeline — normalization, dedup, risk scoring, gate — runs exactly as in
+ * Replays recorded engine reports keyed by commit SHA — one instance per
+ * engine (see {@link DemoScannerConfig}). The rest of the pipeline —
+ * normalization, cross-engine dedup, risk scoring, gate — runs exactly as in
  * production; only the container execution is canned.
  */
-@Component
-@Profile("demo")
 class FixtureScannerEngine implements ScannerEngine {
 
+    private final ScannerType type;
+    private final String recordedVersion;
     private final DemoFixtures fixtures;
 
-    FixtureScannerEngine(DemoFixtures fixtures) {
+    FixtureScannerEngine(ScannerType type, String recordedVersion, DemoFixtures fixtures) {
+        this.type = type;
+        this.recordedVersion = recordedVersion;
         this.fixtures = fixtures;
     }
 
     @Override
     public ScannerType type() {
-        return ScannerType.TRIVY;
+        return type;
     }
 
     @Override
@@ -38,8 +39,8 @@ class FixtureScannerEngine implements ScannerEngine {
     @Override
     public RawReport scan(ScanContext context) {
         Instant start = Instant.now();
-        String payload = fixtures.trivyReport(context.commitSha());
-        return new RawReport(ScannerType.TRIVY, "0.63.0 (recorded)", payload,
+        String payload = fixtures.report(type, context.commitSha());
+        return new RawReport(type, recordedVersion + " (recorded)", payload,
                 Duration.between(start, Instant.now()));
     }
 }
