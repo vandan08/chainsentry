@@ -39,4 +39,7 @@ chainsentry:
     epss-url: https://epss.empiricalsecurity.com/epss_scores-current.csv.gz
     kev-url: https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
     sync-enabled: false   # opt in per environment; keeps dev machines and tests off the network
-  # GitHub App credentials live in application-local.yml (gitignored) — see docs/07-GITHUB-APP-SETUP.md
+  github:
+    api-base-url: https://api.github.com
+    # app-id, private-key-path, webhook-secret live in application-local.yml
+    # (gitignored) — see docs/07-GITHUB-APP-SETUP.md. Absent = App disabled.

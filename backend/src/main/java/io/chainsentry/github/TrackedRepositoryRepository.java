@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface TrackedRepositoryRepository extends JpaRepository<TrackedRepository, UUID> {
 
     Optional<TrackedRepository> findByFullName(String fullName);
+
+    Optional<TrackedRepository> findByGithubRepoId(Long githubRepoId);
 }

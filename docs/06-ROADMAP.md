@@ -34,9 +34,11 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 
 ## Phase 3 — GitHub App + policy gate (~2–3 weeks) → `v0.3.0`  ⭐ the money demo
 **Demo: open a PR adding log4j 2.14.1 → red Check Run + rich PR comment in 90 seconds.**
-- [ ] GitHub App registration, webhook endpoint, HMAC verification, delivery dedup
-- [ ] Installation token service (JWT → token, cached)
-- [ ] PR/push events → scan trigger; Checks API run with annotations
+- [x] Webhook endpoint, HMAC verification (raw body, constant-time), delivery dedup (App registration
+      itself is the manual step in docs/07-GITHUB-APP-SETUP.md)
+- [x] Installation token service (RS256 App JWT → installation token, cached to ~5 min before expiry)
+- [x] PR/push events → scan trigger (via `ScanRequested` event); Check Run with risk-ranked
+      annotations on completion (`ScanCompleted` → `CheckRunPublisher`)
 - [x] `chainsentry.yml` parser + policy gate evaluation (per-rule verdicts with offenders; repo file > platform default)
 - [x] SBOM diff (base vs head) — `GET /sboms/diff` with vuln-annotated added/changed/removed (PR comment still TODO)
 - [ ] Suppressions with expiry + OpenVEX statement generation

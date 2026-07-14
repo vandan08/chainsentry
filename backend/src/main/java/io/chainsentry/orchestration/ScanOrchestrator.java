@@ -19,10 +19,14 @@ import io.chainsentry.scanner.ScanContext;
 import io.chainsentry.scanner.ScannerEngine;
 import io.chainsentry.scanner.SbomGenerator;
 import io.chainsentry.shared.config.ChainSentryProperties;
+import io.chainsentry.shared.event.ScanCompleted;
+import io.chainsentry.shared.event.ScanRequested;
 import io.chainsentry.shared.model.ScanTrigger;
 import io.chainsentry.shared.model.ScannerType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import java.nio.file.Path;
@@ -64,6 +68,7 @@ public class ScanOrchestrator {
     private final EffectivePolicyService effectivePolicyService;
     private final ScanGateService scanGateService;
     private final ChainSentryProperties properties;
+    private final ApplicationEventPublisher events;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public ScanOrchestrator(ScanJobRepository scanJobs, ScannerRunRepository scannerRuns,
@@ -72,7 +77,8 @@ public class ScanOrchestrator {
                             WorkspaceProvider workspaceProvider, NormalizationService normalizationService,
                             RiskEnrichmentService riskEnrichmentService, FindingRepository findings,
                             SbomService sbomService, EffectivePolicyService effectivePolicyService,
-                            ScanGateService scanGateService, ChainSentryProperties properties) {
+                            ScanGateService scanGateService, ChainSentryProperties properties,
+                            ApplicationEventPublisher events) {
         this.scanJobs = scanJobs;
         this.scannerRuns = scannerRuns;
         this.repositories = repositories;
@@ -87,6 +93,14 @@ public class ScanOrchestrator {
         this.effectivePolicyService = effectivePolicyService;
         this.scanGateService = scanGateService;
         this.properties = properties;
+        this.events = events;
+    }
+
+    /** Ingestion points (GitHub webhooks) request scans via event, not direct dependency. */
+    @EventListener
+    public void onScanRequested(ScanRequested request) {
+        requestScan(request.repositoryId(), request.commitSha(), request.ref(),
+                request.prNumber(), request.trigger());
     }
 
     /**
@@ -137,10 +151,14 @@ public class ScanOrchestrator {
             scanJobs.save(job);
             log.info("Scan {} completed: {} findings, gate {}", job.id(),
                     normalized.findings().size(), gate.status());
+            events.publishEvent(new ScanCompleted(job.id(), job.repositoryId(), job.commitSha(),
+                    job.prNumber(), job.trigger(), gate.status(), true));
         } catch (Exception e) {
             log.error("Scan {} failed", job.id(), e);
             job.fail();
             scanJobs.save(job);
+            events.publishEvent(new ScanCompleted(job.id(), job.repositoryId(), job.commitSha(),
+                    job.prNumber(), job.trigger(), null, false));
         } finally {
             if (workspace != null) {
                 workspaceProvider.cleanup(workspace);
