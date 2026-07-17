@@ -11,6 +11,7 @@ import io.chainsentry.policy.EffectivePolicyService;
 import io.chainsentry.policy.GateEvaluation;
 import io.chainsentry.policy.PolicyRules;
 import io.chainsentry.policy.ScanGateService;
+import io.chainsentry.policy.SuppressionService;
 import io.chainsentry.risk.RiskEnrichmentService;
 import io.chainsentry.risk.RiskWeights;
 import io.chainsentry.sbom.SbomService;
@@ -67,6 +68,7 @@ public class ScanOrchestrator {
     private final SbomService sbomService;
     private final EffectivePolicyService effectivePolicyService;
     private final ScanGateService scanGateService;
+    private final SuppressionService suppressionService;
     private final ChainSentryProperties properties;
     private final ApplicationEventPublisher events;
     private final ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -77,8 +79,8 @@ public class ScanOrchestrator {
                             WorkspaceProvider workspaceProvider, NormalizationService normalizationService,
                             RiskEnrichmentService riskEnrichmentService, FindingRepository findings,
                             SbomService sbomService, EffectivePolicyService effectivePolicyService,
-                            ScanGateService scanGateService, ChainSentryProperties properties,
-                            ApplicationEventPublisher events) {
+                            ScanGateService scanGateService, SuppressionService suppressionService,
+                            ChainSentryProperties properties, ApplicationEventPublisher events) {
         this.scanJobs = scanJobs;
         this.scannerRuns = scannerRuns;
         this.repositories = repositories;
@@ -92,6 +94,7 @@ public class ScanOrchestrator {
         this.sbomService = sbomService;
         this.effectivePolicyService = effectivePolicyService;
         this.scanGateService = scanGateService;
+        this.suppressionService = suppressionService;
         this.properties = properties;
         this.events = events;
     }
@@ -141,6 +144,7 @@ public class ScanOrchestrator {
             NormalizationResult normalized = normalizationService.normalize(job.id(), reports);
             riskEnrichmentService.enrich(normalized.findings(), normalized.vulnerabilityMetadata(),
                     riskWeightsFor(repository));
+            suppressionService.applyTo(repository.id(), normalized.findings());
             findings.saveAll(normalized.findings());
 
             generateSbom(context);

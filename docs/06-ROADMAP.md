@@ -32,7 +32,7 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [x] Re-rank persisted findings when feeds update (`VulnerabilityFeedsUpdated` event → `FindingReRankService`)
 - [x] SBOM storage (CycloneDX) + `GET /scans/{id}/sbom` (Trivy CycloneDX generator behind `SbomGenerator` SPI)
 
-## Phase 3 — GitHub App + policy gate (~2–3 weeks) → `v0.3.0`  ⭐ the money demo
+## Phase 3 — GitHub App + policy gate ✅ → `v0.3.0`  ⭐ the money demo
 **Demo: open a PR adding log4j 2.14.1 → red Check Run + rich PR comment in 90 seconds.**
 - [x] Webhook endpoint, HMAC verification (raw body, constant-time), delivery dedup (App registration
       itself is the manual step in docs/07-GITHUB-APP-SETUP.md)
@@ -41,7 +41,9 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
       annotations on completion (`ScanCompleted` → `CheckRunPublisher`)
 - [x] `chainsentry.yml` parser + policy gate evaluation (per-rule verdicts with offenders; repo file > platform default)
 - [x] SBOM diff (base vs head) — `GET /sboms/diff` with vuln-annotated added/changed/removed (PR comment still TODO)
-- [ ] Suppressions with expiry + OpenVEX statement generation
+- [x] Suppressions with expiry + OpenVEX statement generation — `POST /findings/{id}/suppress`,
+      `GET /repos/{id}/vex` aggregate; scan pipeline re-applies unexpired suppressions;
+      ACCEPTED_RISK maps to OpenVEX `affected` + action statement, never a silent pass
 
 ## Phase 4 — GitHub Action + dashboard (~2–3 weeks) → `v0.4.0`
 **Demo: `uses: <you>/chainsentry-action@v1` in any workflow; dashboard shows trend.**

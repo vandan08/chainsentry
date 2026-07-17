@@ -134,6 +134,11 @@ public class Finding {
         this.riskScore = riskScore;
     }
 
+    /** Suppressed findings stay visible in the API but stop counting against the gate. */
+    public void suppress() {
+        this.status = FindingStatus.SUPPRESSED;
+    }
+
     public UUID id() {
         return id;
     }
