@@ -57,4 +57,10 @@ class DashboardController {
         queryService.requireScan(scanId);
         return gateService.evaluate(scanId, PolicyRules.defaults());
     }
+
+    /** SARIF 2.1.0 export — pipe into github/codeql-action/upload-sarif for the code scanning tab. */
+    @GetMapping(value = "/scans/{scanId}/sarif", produces = "application/sarif+json")
+    String sarif(@PathVariable UUID scanId) {
+        return queryService.sarif(scanId);
+    }
 }

@@ -24,6 +24,12 @@ inputs:
     description: 'Generate a CycloneDX SBOM and upload it as a workflow artifact'
     required: false
     default: 'true'
+  code-scanning:
+    description: >-
+      Upload SARIF to the GitHub code scanning tab (needs
+      `security-events: write` permission on the workflow)
+    required: false
+    default: 'false'
   upload-url:
     description: 'ChainSentry platform URL to upload results to (empty = CI-only mode, code never leaves the runner)'
     required: false
@@ -94,11 +100,43 @@ runs:
           --fail-on-severity "$FAIL_ON_SEVERITY" \
           --fail-on-kev "$FAIL_ON_KEV"
 
+    - name: Generate SARIF for code scanning
+      if: ${{ inputs.code-scanning == 'true' }}
+      shell: bash
+      run: |
+        docker run --rm \
+          -v "$GITHUB_WORKSPACE:/workspace:ro" \
+          -v "$RUNNER_TEMP/chainsentry:/output" \
+          -v trivy-cache:/root/.cache \
+          aquasec/trivy:latest fs /workspace \
+          --scanners vuln,secret \
+          --format sarif --output /output/trivy.sarif --exit-code 0
+
+    - name: Upload SARIF to code scanning
+      if: ${{ inputs.code-scanning == 'true' }}
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: ${{ runner.temp }}/chainsentry/trivy.sarif
+        category: chainsentry
+
     - name: Upload results to ChainSentry platform
       if: ${{ inputs.upload-url != '' }}
       shell: bash
+      env:
+        PR_NUMBER: ${{ github.event.pull_request.number || '' }}
       run: |
+        jq -n \
+          --arg fullName "$GITHUB_REPOSITORY" \
+          --argjson repoId "$GITHUB_REPOSITORY_ID" \
+          --arg sha "$GITHUB_SHA" \
+          --arg ref "$GITHUB_REF_NAME" \
+          --arg pr "$PR_NUMBER" \
+          --slurpfile report "$RUNNER_TEMP/chainsentry/trivy-fs.json" \
+          '{repositoryFullName: $fullName, githubRepoId: $repoId, commitSha: $sha,
+            ref: $ref, engine: "TRIVY", report: $report[0]}
+           + (if $pr == "" then {} else {prNumber: ($pr | tonumber)} end)' \
+          > "$RUNNER_TEMP/chainsentry/upload.json"
         curl -sf -X POST "${{ inputs.upload-url }}/api/v1/scans/upload" \
           -H "Authorization: Bearer ${{ inputs.upload-token }}" \
           -H "Content-Type: application/json" \
-          --data-binary @"$RUNNER_TEMP/chainsentry/trivy-fs.json"
+          --data-binary @"$RUNNER_TEMP/chainsentry/upload.json"

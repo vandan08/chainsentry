@@ -48,8 +48,10 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 ## Phase 4 — GitHub Action + dashboard (~2–3 weeks) → `v0.4.0`
 **Demo: `uses: <you>/chainsentry-action@v1` in any workflow; dashboard shows trend.**
 - [x] Composite Action: Trivy in the runner + `gate.py` (severity budgets, real KEV membership via CISA catalog)
-- [ ] Optional upload to platform (`/scans/upload`) for history
-- [ ] SARIF output → GitHub code scanning tab
+- [x] Optional upload to platform (`POST /api/v1/scans/upload`) — self-registering, idempotent per
+      commit, full normalize→risk→suppress→gate pipeline (repo-scoped upload tokens still TODO)
+- [x] SARIF output → GitHub code scanning tab (`code-scanning: 'true'` action input;
+      `GET /api/v1/scans/{id}/sarif` for platform-side scans)
 - [x] Dashboard (static, no build step): scans, risk-ranked findings, gate detail, SBOM delta — served at `/`
 - [ ] React dashboard with org overview + trend chart; GitHub OAuth login
 

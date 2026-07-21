@@ -35,14 +35,17 @@ public class ScanQueryService {
     private final FindingRepository findings;
     private final ScanGateService scanGateService;
 
+    private final SarifGenerator sarifGenerator;
+
     ScanQueryService(TrackedRepositoryRepository repositories, ScanJobRepository scanJobs,
                      ScannerRunRepository scannerRuns, FindingRepository findings,
-                     ScanGateService scanGateService) {
+                     ScanGateService scanGateService, SarifGenerator sarifGenerator) {
         this.repositories = repositories;
         this.scanJobs = scanJobs;
         this.scannerRuns = scannerRuns;
         this.findings = findings;
         this.scanGateService = scanGateService;
+        this.sarifGenerator = sarifGenerator;
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +81,13 @@ public class ScanQueryService {
                 .limit(limit)
                 .map(f -> FindingResponse.from(f, vulnById.get(f.vulnerabilityId())))
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String sarif(UUID scanJobId) {
+        requireScan(scanJobId);
+        List<Finding> scanFindings = findings.findByScanJobIdOrderByRiskScoreDesc(scanJobId);
+        return sarifGenerator.sarif(scanFindings, scanGateService.vulnerabilityIndex(scanFindings));
     }
 
     void requireScan(UUID scanJobId) {
