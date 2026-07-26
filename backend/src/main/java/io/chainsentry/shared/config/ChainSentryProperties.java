@@ -7,7 +7,7 @@ import java.util.Map;
 
 /** Typed view of the {@code chainsentry.*} configuration tree. */
 @ConfigurationProperties(prefix = "chainsentry")
-public record ChainSentryProperties(Scanner scanner, Feeds feeds, GitHub github) {
+public record ChainSentryProperties(Scanner scanner, Feeds feeds, GitHub github, Remediation remediation) {
 
     public record Scanner(Duration defaultTimeout, Map<String, String> images) {
     }
@@ -24,6 +24,17 @@ public record ChainSentryProperties(Scanner scanner, Feeds feeds, GitHub github)
 
         public boolean appConfigured() {
             return appId != null && privateKeyPath != null;
+        }
+    }
+
+    /**
+     * AI remediation (Claude API). The key lives in application-local.yml —
+     * null means the explain/fix-PR endpoints answer 503.
+     */
+    public record Remediation(String anthropicApiKey, String model, String apiBaseUrl, Integer maxTokens) {
+
+        public boolean configured() {
+            return anthropicApiKey != null && !anthropicApiKey.isBlank();
         }
     }
 }

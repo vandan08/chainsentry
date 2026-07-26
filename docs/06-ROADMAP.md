@@ -55,11 +55,15 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [x] Dashboard (static, no build step): scans, risk-ranked findings, gate detail, SBOM delta — served at `/`
 - [ ] React dashboard with org overview + trend chart; GitHub OAuth login
 
-## Phase 5 — AI remediation (~1–2 weeks) → `v0.5.0`
+## Phase 5 — AI remediation ✅ → `v0.5.0`
 **Demo: click "explain" → contextual explanation; click "fix" → draft upgrade PR appears.**
-- [ ] Claude API integration: finding explanation with repo context
-- [ ] Upgrade-PR drafting for fixable SCA findings (bump version, run build, open draft PR)
-- [ ] Guardrails: draft-only, diff size limits, never touches non-manifest files
+- [x] Claude API integration: `POST /findings/{id}/explain` — explanation grounded in the data
+      ChainSentry already has (CVSS/EPSS/KEV/scope/risk score), key in application-local.yml,
+      503 when unconfigured
+- [x] Upgrade-PR drafting for fixable SCA findings — `POST /findings/{id}/fix-pr`: deterministic
+      version bump (no LLM in the write path), fresh branch, draft PR via the App installation
+- [x] Guardrails: draft-only (hardcoded), pom.xml/package.json whitelist, single unambiguous
+      version-string replacement or refuse, bounded size delta before pushing
 
 ## Phase 6 — SaaS polish (ongoing)
 - [ ] Multi-tenancy hardening (org isolation tests), rate limiting

@@ -43,3 +43,9 @@ chainsentry:
     api-base-url: https://api.github.com
     # app-id, private-key-path, webhook-secret live in application-local.yml
     # (gitignored) — see docs/07-GITHUB-APP-SETUP.md. Absent = App disabled.
+  remediation:
+    api-base-url: https://api.anthropic.com
+    model: claude-opus-4-8
+    max-tokens: 1024   # finding explanations are deliberately short
+    # anthropic-api-key lives in application-local.yml (gitignored).
+    # Absent = /explain and /fix-pr answer 503.
