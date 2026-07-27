@@ -1,0 +1,37 @@
+# Managed-platform deployment (Render / Fly / Railway / any Docker host).
+# Activate with SPRING_PROFILES_ACTIVE=prod,demo — `prod` is the hosting shape,
+# `demo` is what the instance is showing. Nothing secret lives here: every
+# value either comes from the environment or is safe to publish.
+
+server:
+  port: ${PORT:8080}          # managed platforms assign the port at runtime
+  forward-headers-strategy: framework   # honour X-Forwarded-* so links behind the load balancer keep https
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  datasource:
+    # DATABASE_URL (libpq form) is translated to these by
+    # DatabaseUrlEnvironmentPostProcessor; setting SPRING_DATASOURCE_URL
+    # explicitly overrides it.
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:5}   # free-tier Postgres allows few connections
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+chainsentry:
+  demo:
+    # The public instance is a portfolio link, not a sandbox: reads are open,
+    # writes are refused. Set false to run a fully interactive deployment.
+    read-only: ${CHAINSENTRY_DEMO_READ_ONLY:true}
+  feeds:
+    # Frozen EPSS/KEV snapshot keeps demo risk scores reproducible; a real
+    # deployment turns this on.
+    sync-enabled: ${CHAINSENTRY_FEEDS_SYNC:false}
+
+logging:
+  level:
+    root: INFO
+    io.chainsentry: INFO
