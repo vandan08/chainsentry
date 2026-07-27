@@ -7,9 +7,18 @@ import java.util.Map;
 
 /** Typed view of the {@code chainsentry.*} configuration tree. */
 @ConfigurationProperties(prefix = "chainsentry")
-public record ChainSentryProperties(Scanner scanner, Feeds feeds, GitHub github, Remediation remediation) {
+public record ChainSentryProperties(Scanner scanner, Feeds feeds, GitHub github, Remediation remediation,
+                                    Demo demo) {
 
     public record Scanner(Duration defaultTimeout, Map<String, String> images) {
+    }
+
+    /**
+     * Public demo deployment. {@code readOnly} rejects every state-changing API
+     * call so a link that anyone on the internet can open cannot have its
+     * seeded world edited out from under the next visitor.
+     */
+    public record Demo(boolean readOnly) {
     }
 
     public record Feeds(String epssUrl, String kevUrl, boolean syncEnabled) {
