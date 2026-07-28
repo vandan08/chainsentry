@@ -3,7 +3,7 @@
 Supply-chain security platform (portfolio project): scans code/deps/containers in CI, ranks findings by CVSS × EPSS × CISA-KEV × dependency scope, diffs SBOMs per PR, enforces policy-as-code, emits OpenVEX.
 
 ## Map
-- `backend/` — Spring Boot 4.1, Java 24, Maven. Modular-monolith packages under `io.chainsentry.*` (github, orchestration, scanner, normalization, risk, sbom, policy, dashboard, shared). Schema owned by Flyway (`db/migration`), `ddl-auto: validate`.
+- `backend/` — Spring Boot 4.1, Java 24, Maven. Modular-monolith packages under `io.chainsentry.*` (github, orchestration, scanner, normalization, risk, sbom, policy, remediation, dashboard, demo, shared). Modules stay acyclic: cross-module triggers flow through Spring events in `shared/event` (`ScanRequested` in, `ScanCompleted` out). Schema owned by Flyway (`db/migration`), `ddl-auto: validate`.
 - `github-action/` — composite action + `gate.py` policy gate.
 - `docs/` — numbered design docs; `06-ROADMAP.md` is the source of truth for what to build next (phases with checklists — keep it updated as work lands).
 
@@ -16,7 +16,7 @@ Supply-chain security platform (portfolio project): scans code/deps/containers i
 
 ## Build & test
 ```
-cd backend && mvn verify        # 48 unit tests, Docker-free
+cd backend && mvn verify        # 113 unit tests, Docker-free
 ```
 Integration tests (Testcontainers) still TODO — tag them separately so plain `mvn test` stays Docker-free.
 

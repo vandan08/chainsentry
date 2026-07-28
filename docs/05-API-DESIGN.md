@@ -27,6 +27,7 @@ GET  /api/v1/scans/{scanId}                Status + summary (counts by severity,
 GET  /api/v1/scans/{scanId}/findings       Paged; filter: severity, type, engine, status,
                                            minRiskScore; sort: risk_score desc (default)
 GET  /api/v1/scans/{scanId}/gate           Policy evaluation detail (which rule fired, why)
+GET  /api/v1/scans/{scanId}/sarif          SARIF 2.1.0 export for GitHub code scanning
 ```
 
 ### Findings
@@ -35,6 +36,8 @@ GET  /api/v1/repos/{repoId}/findings       Open findings across latest scans (th
 GET  /api/v1/findings/{id}                 Full detail: sources, CVE data, EPSS/KEV, fix version
 POST /api/v1/findings/{id}/suppress        {justification, rationale, expiresOn} → creates
                                            suppression + OpenVEX statement (requires approver role)
+POST /api/v1/findings/{id}/explain         Claude-backed contextual explanation (503 if no API key)
+POST /api/v1/findings/{id}/fix-pr          Draft upgrade PR for fixable SCA findings (guardrailed)
 ```
 
 ### SBOM

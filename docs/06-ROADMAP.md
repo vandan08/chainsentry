@@ -20,7 +20,7 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [x] `POST /repos/{id}/scans`, `GET /scans/{id}`, `GET /scans/{id}/findings`, `GET /scans/{id}/gate`
 - [x] Demo profile: recorded Trivy/CycloneDX fixtures through the real pipeline, frozen EPSS/KEV snapshot, seeded PASS + FAIL scans
 - [ ] Testcontainers integration test: scan a fixture project with a known CVE (e.g. log4j-core 2.14.1), assert the finding
-- [x] Golden-file tests for normalization (48 unit tests, Docker-free `mvn verify`)
+- [x] Golden-file tests for normalization (113 unit tests as of v0.5.0, Docker-free `mvn verify`)
 
 ## Phase 2 — Multi-engine + risk engine ✅ → `v0.2.0`
 **Demo: same CVE from two engines = one finding; KEV CVE outranks a plain critical.**
