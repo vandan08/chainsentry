@@ -76,6 +76,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Boot 4 splits the test slices out of starter-test: @WebMvcTest and
+             MockMvc live in spring-boot-webmvc-test, not the umbrella starter. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Integration tests (-Pintegration): real Postgres via Testcontainers -->
         <dependency>

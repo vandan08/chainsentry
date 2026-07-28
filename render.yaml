@@ -1,0 +1,41 @@
+# Render Blueprint — one web service (the container from ./Dockerfile) plus a
+# managed Postgres. Point Render at this repo and it provisions both; nothing
+# here is secret.
+#
+# See docs/11-DEPLOYMENT.md for the click-through, the free-tier caveats, and
+# the Fly.io / Railway equivalents.
+
+services:
+  - type: web
+    name: chainsentry
+    runtime: docker
+    plan: free # 512 MB / spins down when idle — see the doc before you demo live
+    region: oregon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: commit
+    envVars:
+      # `prod` is the hosting shape (PORT, DATABASE_URL, read-only guard);
+      # `demo` is what the instance is showing (the seeded acme org).
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod,demo
+      # libpq-form URL; DatabaseUrlEnvironmentPostProcessor turns it into JDBC.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: chainsentry-db
+          property: connectionString
+      # Free Postgres allows few connections and the free dyno has little heap.
+      - key: DB_POOL_SIZE
+        value: "3"
+      # Reads stay open; every write is refused. Flip to false for a private,
+      # fully interactive deployment.
+      - key: CHAINSENTRY_DEMO_READ_ONLY
+        value: "true"
+
+databases:
+  - name: chainsentry-db
+    plan: free # NOTE: Render's free Postgres is deleted after 30 days
+    region: oregon
+    databaseName: chainsentry
+    user: chainsentry
