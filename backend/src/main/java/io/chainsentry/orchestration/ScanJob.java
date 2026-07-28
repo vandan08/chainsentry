@@ -84,6 +84,16 @@ public class ScanJob {
         this.finishedAt = Instant.now();
     }
 
+    /**
+     * Demo seeding only: rewrites the timestamps so a scripted scan history can
+     * span past weeks instead of collapsing onto the seeding instant. Real scans
+     * get their timestamps from the lifecycle methods above.
+     */
+    public void backdate(Instant createdAt, Instant finishedAt) {
+        this.createdAt = createdAt;
+        this.finishedAt = finishedAt;
+    }
+
     public UUID id() {
         return id;
     }
