@@ -1,3 +1,8 @@
+# API-only image — no dashboard. This is what docker-compose and local
+# container runs use. For deployment, build the root ../Dockerfile instead:
+# it compiles the React dashboard into this jar's static resources so the SPA
+# and the API share one origin. See docs/11-DEPLOYMENT.md.
+
 # Build stage
 FROM maven:3.9-eclipse-temurin-24 AS build
 WORKDIR /app

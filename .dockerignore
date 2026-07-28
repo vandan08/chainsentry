@@ -1,0 +1,17 @@
+# Keep the build context small and the layer cache honest: anything generated
+# locally is rebuilt inside the image anyway, and shipping it in would defeat
+# the dependency-caching layers.
+.git
+.github
+.idea
+.claude
+docs
+**/node_modules
+**/dist
+**/target
+**/*.log
+frontend/tsconfig.tsbuildinfo
+backend/src/main/resources/application-local.yml
+docker-compose*.yml
+*.md
+LICENSE
