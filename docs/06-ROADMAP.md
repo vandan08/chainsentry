@@ -22,7 +22,7 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [x] Testcontainers integration test (`mvn verify -Pintegration`): full pipeline against real
       Postgres — asserts the log4j-core 2.14.1 finding, cross-engine dedup, gate verdicts,
       JSONB SBOM; plain `mvn verify` stays Docker-free
-- [x] Golden-file tests for normalization (113 unit tests as of v0.5.0, Docker-free `mvn verify`)
+- [x] Golden-file tests for normalization (131 unit tests as of v0.6.0, Docker-free `mvn verify`)
 
 ## Phase 2 — Multi-engine + risk engine ✅ → `v0.2.0`
 **Demo: same CVE from two engines = one finding; KEV CVE outranks a plain critical.**
@@ -55,7 +55,11 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
 - [x] SARIF output → GitHub code scanning tab (`code-scanning: 'true'` action input;
       `GET /api/v1/scans/{id}/sarif` for platform-side scans)
 - [x] Dashboard (static, no build step): scans, risk-ranked findings, gate detail, SBOM delta — served at `/`
-- [ ] React dashboard with org overview + trend chart; GitHub OAuth login
+- [x] React dashboard (React 19 + Vite + TypeScript): org overview, repo trend chart, scan
+      detail, gate detail — Recharts is code-split so it stays out of the first paint
+- [ ] GitHub OAuth login (the `useAuth` hook and open-mode fallback are in place on the
+      client; `/auth/github/login` and `/api/v1/me` are not implemented server-side yet, so
+      every deployment currently runs in open mode)
 
 ## Phase 5 — AI remediation ✅ → `v0.5.0`
 **Demo: click "explain" → contextual explanation; click "fix" → draft upgrade PR appears.**
@@ -68,10 +72,13 @@ Phased so that **every phase ends with something demoable**. Estimates assume pa
       version-string replacement or refuse, bounded size delta before pushing
 
 ## Phase 6 — SaaS polish (ongoing)
+- [x] Deploy: single-container image (dashboard baked into the jar, one origin), env-driven
+      config (`PORT`, `DATABASE_URL` → JDBC translation), SPA deep-link forwarding,
+      read-only guard for the public instance, Render blueprint + docs/11-DEPLOYMENT.md
+- [x] Landing page — the risk re-ranking shown as the hero exhibit rather than described
+- [ ] Point the live-demo link in the README at the deployed instance
 - [ ] Multi-tenancy hardening (org isolation tests), rate limiting
 - [ ] Signed scan attestations (cosign/Sigstore) — provenance story
-- [ ] Deploy: Fly.io/Render/Hetzner + managed Postgres; demo instance with a seeded vulnerable repo
-- [ ] Landing page with live demo GIF
 - [ ] Dogfood: ChainSentry scans ChainSentry in its own CI (badge in README)
 
 ---

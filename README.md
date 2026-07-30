@@ -7,6 +7,8 @@
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1-6DB33F?logo=springboot&logoColor=white)]()
 [![License](https://img.shields.io/badge/License-MIT-blue)]()
 
+**▶ Live demo: <!-- paste your deployed URL here --> · [Deploy your own](docs/11-DEPLOYMENT.md)**
+
 ---
 
 ## The problem
@@ -74,8 +76,11 @@ Full details in [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md).
 ```
 chainsentry/
 ├── backend/            Spring Boot platform (API, orchestrator, engines)
+├── frontend/           React 19 + Vite dashboard and landing page
 ├── github-action/      Composite GitHub Action (scan + gate in CI)
-├── docs/               Vision, architecture, data model, API, roadmap
+├── docs/               Vision, architecture, data model, API, roadmap, deployment
+├── Dockerfile          Deployment image: dashboard baked into the jar
+├── render.yaml         Render blueprint (web service + Postgres)
 ├── docker-compose.yml  Local dev: Postgres, Redis
 └── .github/workflows/  CI for this repo itself
 ```
@@ -91,9 +96,10 @@ cd backend
 mvn spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 
-Open **`http://localhost:8080/`**. The demo profile replays recorded Trivy
-reports through the real pipeline and seeds two scans of a fictional
-`acme/payment-service`:
+Open **`http://localhost:8080/`** for the landing page, `/app` for the
+dashboard. The demo profile replays recorded scanner reports through the real
+pipeline and seeds a whole org — six repositories and 23 backdated scans —
+centred on a fictional `acme/payment-service`:
 
 - a push to `main` — two modest findings, gate **PASS** ✅
 - PR #42 ("add audit logging") — an innocent-looking internal starter drags in
@@ -104,6 +110,10 @@ CRITICAL ranks at **0.38** (no known exploitation, transitive), while both
 KEV-listed log4j CVEs rank above **0.93** — and the gate names the exact rules
 and findings that blocked the merge. The **supply-chain delta** panel shows
 precisely what the PR is about to merge.
+
+Working on the dashboard itself? `cd frontend && npm run dev` serves it on
+5173 with `/api` proxied to the backend (`BACKEND_URL` overrides the target);
+`VITE_MOCK=1 npm run dev` runs it against fixtures with no backend at all.
 
 Without the demo profile, scans run real Trivy containers against shallow
 clones — same pipeline, same policy engine (`mvn spring-boot:run`, Docker
@@ -117,6 +127,24 @@ GET  /api/v1/scans/{id}/gate           which policy rule fired, and on what
 GET  /api/v1/scans/{id}/sbom           CycloneDX document
 GET  /api/v1/sboms/diff?base=&head=    the PR supply-chain delta
 ```
+
+## Deployment
+
+The whole product ships as **one container**: the root `Dockerfile` builds the
+React dashboard, bakes it into the Spring Boot jar's static resources, and
+serves the SPA and the API from a single origin — no CORS, no second
+deployment, one URL.
+
+```bash
+docker build -t chainsentry .
+docker run -p 8080:8080 -e SPRING_PROFILES_ACTIVE=prod,demo   -e DATABASE_URL="postgres://user:pass@host:5432/chainsentry" chainsentry
+```
+
+Because the demo profile replays recorded scanner reports instead of shelling
+out to scanner containers, a public instance needs nothing but a JVM and a
+Postgres — it runs on a free tier. Render blueprint, Fly.io and Railway
+recipes, and the free-tier caveats worth knowing before you share the link are
+in **[docs/11-DEPLOYMENT.md](docs/11-DEPLOYMENT.md)**.
 
 ## Project status
 
@@ -139,6 +167,8 @@ GitHub App, AI remediation).
 | [07-GITHUB-APP-SETUP.md](docs/07-GITHUB-APP-SETUP.md) | Registering and wiring the GitHub App |
 | [08-DEV-SETUP.md](docs/08-DEV-SETUP.md) | Local environment setup |
 | [09-INTERVIEW-TALKING-POINTS.md](docs/09-INTERVIEW-TALKING-POINTS.md) | How to present this project |
+| [10-PROJECT-HANDBOOK.md](docs/10-PROJECT-HANDBOOK.md) | The project end to end, in one document |
+| [11-DEPLOYMENT.md](docs/11-DEPLOYMENT.md) | Shipping it to a public URL |
 
 ## License
 
