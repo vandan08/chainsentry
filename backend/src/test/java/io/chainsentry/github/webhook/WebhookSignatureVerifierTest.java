@@ -18,7 +18,7 @@ class WebhookSignatureVerifierTest {
 
     private WebhookSignatureVerifier verifier(String secret) {
         return new WebhookSignatureVerifier(new ChainSentryProperties(null, null,
-                new ChainSentryProperties.GitHub(null, null, secret, null), null));
+                new ChainSentryProperties.GitHub(null, null, secret, null), null, null));
     }
 
     private String githubSignature(String secret, String body) throws Exception {

@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../api";
 import { Failed, Loading, useAsync } from "../components/Async";
@@ -5,9 +6,14 @@ import { Breadcrumbs } from "../components/Breadcrumbs";
 import { GateBadge } from "../components/GateBadge";
 import { RiskMeter } from "../components/RiskMeter";
 import { SeverityBar } from "../components/SeverityBar";
-import { TrendChart } from "../components/TrendChart";
 import { shortSha, timeAgo } from "../format";
 import type { RepositorySummary, ScanSummary, TrendPoint } from "../types";
+
+// Recharts is ~two thirds of the bundle and only this page draws a chart,
+// so it loads on demand rather than sitting in the landing page's payload.
+const TrendChart = lazy(() =>
+  import("../components/TrendChart").then((m) => ({ default: m.TrendChart })),
+);
 
 interface RepoData {
   repo: RepositorySummary | undefined;
@@ -51,7 +57,9 @@ export function RepoDetail() {
 
       <h2>Findings over time</h2>
       <div className="card">
-        <TrendChart points={data.trend} />
+        <Suspense fallback={<div className="skeleton" style={{ height: 220 }} />}>
+          <TrendChart points={data.trend} />
+        </Suspense>
       </div>
 
       <h2>Scans</h2>
