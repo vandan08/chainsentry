@@ -49,10 +49,17 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* `vw` counts the scrollbar, so the landing hero's full-bleed backdrop
+     overhangs by exactly the scrollbar width. Clip it on the scroll
+     container itself; `clip` (not `hidden`) leaves the sticky topbar intact. */
+  overflow-x: clip;
 }
 
 body {
   margin: 0;
+  /* The landing hero bleeds its backdrop past the shell; clip rather than
+     hidden so the sticky topbar keeps working. */
+  overflow-x: clip;
   background: var(--page);
   color: var(--text-primary);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -115,6 +122,16 @@ a {
 
 .topbar .spacer {
   flex: 1;
+}
+
+/* Right-hand nav entry back into the app from the landing page. */
+.topbar .navlink {
+  transition: color 0.12s ease;
+}
+
+.topbar .navlink:hover,
+.topbar .navlink.active {
+  color: var(--text-primary);
 }
 
 /* ── Breadcrumbs & page head ────────────────────────────── */
@@ -509,6 +526,9 @@ th.num {
 }
 
 .risk .fill {
+  /* Must be block: as an inline span the width/height below are ignored and
+     the meter renders as an empty track at every score. */
+  display: block;
   height: 100%;
   border-radius: 3px;
 }

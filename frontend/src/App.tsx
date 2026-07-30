@@ -1,6 +1,7 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Route, Routes } from "react-router-dom";
 import { useAuth } from "./auth";
 import { Logo } from "./components/Logo";
+import { Home } from "./pages/Home";
 import { Landing } from "./pages/Landing";
 import { Overview } from "./pages/Overview";
 import { RepoDetail } from "./pages/RepoDetail";
@@ -29,7 +30,8 @@ function UserMenu() {
   );
 }
 
-export function App() {
+/** Dashboard chrome: everything except the landing page lives inside it. */
+function Dashboard() {
   return (
     <div className="shell">
       <header className="topbar">
@@ -39,14 +41,28 @@ export function App() {
         </Link>
         <span className="crumb">supply-chain security</span>
         <span className="spacer" />
+        <NavLink to="/app" className="crumb navlink">
+          Dashboard
+        </NavLink>
         <UserMenu />
       </header>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/app" element={<Landing />} />
         <Route path="/orgs/:orgId/overview" element={<Overview />} />
         <Route path="/repos/:repoId" element={<RepoDetail />} />
         <Route path="/scans/:scanId" element={<ScanDetail />} />
       </Routes>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <Routes>
+      {/* The landing page is full-bleed and brings its own nav, so it renders
+          outside the dashboard shell rather than inside its max-width column. */}
+      <Route path="/" element={<Home />} />
+      <Route path="*" element={<Dashboard />} />
+    </Routes>
   );
 }
