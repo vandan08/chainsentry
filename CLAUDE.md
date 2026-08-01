@@ -16,9 +16,10 @@ Supply-chain security platform (portfolio project): scans code/deps/containers i
 
 ## Build & test
 ```
-cd backend && mvn verify        # 113 unit tests, Docker-free
+cd backend && mvn verify                 # 113 unit tests, Docker-free
+cd backend && mvn verify -Pintegration   # + ScanPipelineIT (Testcontainers Postgres, needs Docker)
 ```
-Integration tests (Testcontainers) still TODO — tag them separately so plain `mvn test` stays Docker-free.
+Testcontainers 2.x (Boot 4 manages it): artifacts are `testcontainers-postgresql` / `testcontainers-junit-jupiter` — the 1.x names have no managed version.
 
 ## Gotchas (learned the hard way)
 - **Spring Boot 4 modularized auto-configuration**: Flyway needs `spring-boot-flyway`, `RestClient.Builder` needs `spring-boot-restclient` on the classpath — `flyway-core` alone silently never migrates.
