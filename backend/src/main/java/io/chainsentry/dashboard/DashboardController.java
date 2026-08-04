@@ -1,8 +1,10 @@
 package io.chainsentry.dashboard;
 
 import io.chainsentry.dashboard.dto.FindingResponse;
+import io.chainsentry.dashboard.dto.OrgOverviewResponse;
 import io.chainsentry.dashboard.dto.RepositorySummaryResponse;
 import io.chainsentry.dashboard.dto.ScanSummaryResponse;
+import io.chainsentry.dashboard.dto.TrendPointResponse;
 import io.chainsentry.policy.GateEvaluation;
 import io.chainsentry.policy.PolicyRules;
 import io.chainsentry.policy.ScanGateService;
@@ -22,11 +24,24 @@ import java.util.UUID;
 class DashboardController {
 
     private final ScanQueryService queryService;
+    private final OrgQueryService orgQueryService;
     private final ScanGateService gateService;
 
-    DashboardController(ScanQueryService queryService, ScanGateService gateService) {
+    DashboardController(ScanQueryService queryService, OrgQueryService orgQueryService,
+                        ScanGateService gateService) {
         this.queryService = queryService;
+        this.orgQueryService = orgQueryService;
         this.gateService = gateService;
+    }
+
+    @GetMapping("/orgs/{organizationId}/overview")
+    OrgOverviewResponse orgOverview(@PathVariable UUID organizationId) {
+        return orgQueryService.overview(organizationId);
+    }
+
+    @GetMapping("/repos/{repositoryId}/trend")
+    List<TrendPointResponse> trend(@PathVariable UUID repositoryId) {
+        return orgQueryService.trend(repositoryId);
     }
 
     @GetMapping("/repos")
